@@ -3,8 +3,8 @@ This repository contains a variety of code used to generate filtered noise stimu
 
 Specifically, the following repositories implement code to generate
 
-a. Spatiotemporally filtered white noise stimuli.
-b. Stochastic noise stimuli that expand or contract akin to optic flow via exponential spatial frequency expansion.
+1. Spatiotemporally filtered white noise stimuli.
+2. Stochastic noise stimuli that expand or contract akin to optic flow via exponential spatial frequency expansion.
 
 TODO:
 - add method of pixel noise adjustment to these stimuli
