@@ -1,4 +1,4 @@
-function [filterGrid] = generategrid(filterproperties)
+function [wx,wy,wt] = generategrid(params)
 %GENERATEGRID: Generates a grid of values using the meshgrid function that
 %can be used to derive the filters required to generate 3D filtered noise
 %stimuli
@@ -21,10 +21,15 @@ function [filterGrid] = generategrid(filterproperties)
 %       filterProperties.frames:  number of frames
 
 
-img_X = filterProperties.pixelsX;
-img_Y = filterProperties.pixelsY;
-img_T = filterProperties.frames;
+img_X = params.npix_x;
+img_Y = params.npix_y;
+img_T = params.frames;
+ppd = params.ppd;
+fps = params.framerate;
 
 [wx,wy,wt] = meshgrid(-(img_X/2):((img_X)/2-1),-(img_Y/2):((img_Y)/2-1),-(img_T/2):((img_T)/2-1));
+wx = wx.*(ppd/img_X);
+wy = wy.*(ppd/img_Y);
+wt = wt.*(fps/img_T);
 
 end

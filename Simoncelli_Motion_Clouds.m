@@ -5,14 +5,17 @@ filter_settings = load('filter.mat');
 %% some defualt parameters
 addpath('/home/manu/Projects/3DFilteredNoiseStimuli/src/')
 
+params = specifyfilterproperties;
+
+
 %parameters for size of image
 img_X = 256; %pixels in x
 img_Y = 256; %pixels in y
-img_T = 256; %frames
+img_T = 120; %frames
 ppd = 64; %pixels per degree
 fps = 120; %frames per second
-speed = 4; %degrees/s
-ori = 0; 
+speed = 1; %degrees/s
+ori = 0;
 
 
 %parameters for filtering in temporal domain
@@ -22,13 +25,10 @@ phi = atand(speed); %this is default elevation, I'll need to figure out how fast
 
 %parameters for filtering orientation
 rho_ori = 1; %still a unit vector
-ori_target_radians = deg2rad(90); %same theta 
+ori_target_radians = deg2rad(0); %same theta
 
 %step 1: define mesh grid
-[wx,wy,wt] = meshgrid(-(img_X/2):((img_X)/2-1),-(img_Y/2):((img_Y)/2-1),-(img_T/2):((img_T)/2-1));
-wx = wx.*(ppd/img_X);
-wy = wy.*(ppd/img_Y);
-wt = wt.*(fps/img_T);
+[wx,wy,wt] = generategrid(params);
 
 %step 2: define frequency radius
 frequency_1D = [reshape(wx,1,[]);reshape(wy,1,[]);reshape(wt,1,[])];
@@ -36,6 +36,8 @@ frequency_radius_1D = sqrt(sum(frequency_1D.^2));
 
 %step 4: define unit vector that is oriented in the direction you want (has given
 %orientation and tilt for speed filter
+
+%phi is speed, theta is direction!
 
 x = rho*sind(phi)*cosd(theta);
 y = rho*sind(phi)*sind(theta);
@@ -48,15 +50,15 @@ dot_product = u_vec*frequency_1D;
 cos_dot_product = dot_product./frequency_radius_1D;
 cos_dot_product_squared = (cos_dot_product).^2;
 sin_dot_product = (1-cos_dot_product_squared).^.5; %max(x,0)
-raised_sin = real(sin_dot_product).^lookupspeedexponent(speed,1); %order 9
+raised_sin = real(sin_dot_product).^params.speed_exp; %order 9
 
 %take care of the inf at 0,0,0
 raised_sin(isnan(raised_sin)) = 0;
 
 %reshape raised sin
-reshaped_raised_sin = reshape(raised_sin,img_X,img_Y,img_T); 
+reshaped_raised_sin = reshape(raised_sin,img_X,img_Y,img_T);
 
-%step 6: prepare orientation filter 
+%step 6: prepare orientation filter
 [x_temp,y_temp] = pol2cart(ori_target_radians,1);
 u_vec_orientation = [x_temp y_temp];
 
@@ -84,7 +86,7 @@ random_noise = randn(img_X,img_Y,img_T);
 random_noise_to_fourier = fftn(random_noise);
 
 %step 9: Filter noise
-filter_convolution= random_noise_to_fourier.*orientation_filter_reshaped.*reshaped_raised_sin;
+filter_convolution= random_noise_to_fourier.*reshaped_raised_sin.*radius_filter_reshaped;
 Fz = ifftshift(filter_convolution);
 Fz(1,1,1) = 0; %remove DC
 Fz2 = ifftn(Fz);
@@ -96,8 +98,8 @@ ratio_imag_to_real = mean(abs(Fz2_imag(:)))./mean(abs(real(Fz2_real(:))));
 Fz3 = ifftn(Fz,'symmetric');
 %
 
-%step 10: normalize images for contrast
-contrast = 1;   
+%step 10: normalize images for contrast. Change this ENTIRELY.
+contrast = 1;
 meanSubFz3 = Fz3-mean(Fz3(:));
 z = meanSubFz3;
 z = (.5* z/max(abs(z(:)))* contrast + .5);
@@ -106,11 +108,11 @@ z = (.5* z/max(abs(z(:)))* contrast + .5);
 
 %output = mat2gray(meanSubFz3);
 %
-output = mat2gray(z);
-v = VideoWriter(['example3_' datestr(datetime('now'),'yyyy-mm-dd_HH:MM:SS')]);
-v.FrameRate = 120;
-open(v)
-for i = 1:size(output,3)
-    writeVideo(v,output(:,:,i));
-end
-close (v);
+% output = mat2gray(z);
+% v = VideoWriter(['example3_' datestr(datetime('now'),'yyyy-mm-dd_HH:MM:SS')]);
+% v.FrameRate = 120;
+% open(v)
+% for i = 1:size(output,3)
+%     writeVideo(v,output(:,:,i));
+% end
+% close (v);

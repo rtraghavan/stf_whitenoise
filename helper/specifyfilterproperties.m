@@ -77,7 +77,7 @@ ori_bw = all_parameters(13);
 
 % create a filter properties structure that has everything you need in it.
 parameters = struct;
-
+parameters.ppd = ppd;
 parameters.npix_x = npix_x;
 parameters.x_sizedeg = round(npix_x*(1/ppd));
 
@@ -86,7 +86,7 @@ parameters.y_sizedeg = round(npix_y*(1/ppd));
 
 parameters.frames = frames;
 parameters.movielength = frames/framerate;
-
+parameters.framerate = framerate;
 %Speed Filter Properties and Converstions
 parameters.direction = direction;
 parameters.speed_dps = speed;
