@@ -3,10 +3,10 @@ clear variables
 filter_settings = load('filter.mat');
 
 %% some defualt parameters
-addpath('/home/manu/Projects/3DFilteredNoiseStimuli/src/')
-
+addpath('~/Code/simoncelli_noise/helper')
+%%
 params = specifyfilterproperties;
-
+%%
 
 %parameters for size of image
 img_X = 256; %pixels in x
@@ -33,6 +33,13 @@ ori_target_radians = deg2rad(0); %same theta
 %step 2: define frequency radius
 frequency_1D = [reshape(wx,1,[]);reshape(wy,1,[]);reshape(wt,1,[])];
 frequency_radius_1D = sqrt(sum(frequency_1D.^2));
+
+% sf2 = frequency_radius_1D_sf(:).^-color;
+% sf2(isinf(sf2)) = NaN;
+% sf2 = sf2./max(sf2);
+% sf2(isnan(sf2)) = 1;
+
+%env = reshape(sf2,size(sf));
 
 %step 4: define unit vector that is oriented in the direction you want (has given
 %orientation and tilt for speed filter
@@ -76,7 +83,7 @@ orientation_filter_reshaped = reshape(orientation_filter,img_X,img_Y,img_T);
 
 %step 7: apply prespecified bandpass filter
 [xparams,yparams] = radialfrequencyfilter(2,4,.5,false);
-radius_filter = interp1(xparams,yparams,frequency_radius_1D,'linear','extrap'); %schrater filter
+radius_filter = interp1(xparams,yparams,frequency_1D_sf_radius,'linear','extrap'); %schrater filter
 radius_filter_reshaped = reshape(radius_filter,img_X,img_Y,img_T);
 
 
@@ -102,7 +109,7 @@ Fz3 = ifftn(Fz,'symmetric');
 contrast = 1;
 meanSubFz3 = Fz3-mean(Fz3(:));
 z = meanSubFz3;
-z = (.5* z/max(abs(z(:)))* contrast + .5);
+z = z./std(z(:)) * 0.1;
 %meanSubFz3 = meanSubFz3/(4*std(meanSubFz3(:)));
 
 
